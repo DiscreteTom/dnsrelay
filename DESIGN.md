@@ -38,49 +38,52 @@
 
 ```python
 data = {
-	'header': {
-		'id': str,
-		'qr': int,
-		'opcode': int,
-		'aa': bool,
-		'tc': bool,
-		'rd': bool,
-		'ra': bool,
-		'rcode': int,
-		'qdcount': int,
-		'ancount': int,
-		'nscount': int,
-		'arcount': int
-	},
-	'question': {
-		'qname': str,
-		'qtype': str,
-		'qclass': str
-	},
-	'answer': [{
-		'name': str,
-		'type': str,
-		'class': str,
-		'ttl': int,
-		'rdlength': int,
-		'rddata': bytes
-	}],
-	'authority': [{ # same as the format of data['answer']
-		'name': str,
-		'type': str,
-		'class': str,
-		'ttl': int,
-		'rdlength': int,
-		'rddata': bytes
-	}],
-	'additional': [{ # same as the format of data['answer']
-		'name': str,
-		'type': str,
-		'class': str,
-		'ttl': int,
-		'rdlength': int,
-		'rddata': bytes
-	}]
+	'address': str,
+	'data': {
+		'header': {
+			'id': str,
+			'qr': int,
+			'opcode': int,
+			'aa': bool,
+			'tc': bool,
+			'rd': bool,
+			'ra': bool,
+			'rcode': int,
+			'qdcount': int,
+			'ancount': int,
+			'nscount': int,
+			'arcount': int
+		},
+		'question': {
+			'qname': str,
+			'qtype': str,
+			'qclass': str
+		},
+		'answer': [{
+			'name': str,
+			'type': str,
+			'class': str,
+			'ttl': int,
+			'rdlength': int,
+			'rddata': bytes
+		}],
+		'authority': [{ # same as the format of data['answer']
+			'name': str,
+			'type': str,
+			'class': str,
+			'ttl': int,
+			'rdlength': int,
+			'rddata': bytes
+		}],
+		'additional': [{ # same as the format of data['answer']
+			'name': str,
+			'type': str,
+			'class': str,
+			'ttl': int,
+			'rdlength': int,
+			'rddata': bytes
+		}]
+	}
 }
 ```
 
