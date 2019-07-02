@@ -6,7 +6,7 @@ from processor import Processor
 from refdict import refdict
 
 class NetController:
-	def __init__(self, dnsFileName: str, debugLevel = 0):
+	def __init__(self, serverAddr: str, dnsFileName: str, debugLevel = 0):
 		'''
 		construct a net controller
 
@@ -14,6 +14,7 @@ class NetController:
 		'''
 		self.processor = Processor(self, dnsFileName, debugLevel)
 		self.debugLevel = debugLevel
+		self.serverAddr = serverAddr
 
 	def start(self) -> bool:
 		'''
