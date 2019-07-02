@@ -118,10 +118,10 @@ class NetController:
 					'rd': bool(rawData[2] & 0b00000001),
 					'ra': bool(rawData[3] & 0b10000000),
 					'rcode': rawData[3] & 0b00001111,
-					'qdcount': rawData[4] << 8 + rawData[5],
-					'ancount': rawData[6] << 8 + rawData[7],
-					'nscount': rawData[8] << 8 + rawData[9],
-					'arcount': rawData[10] << 8 + rawData[11]
+					'qdcount': (rawData[4] << 8) + rawData[5],
+					'ancount': (rawData[6] << 8) + rawData[7],
+					'nscount': (rawData[8] << 8) + rawData[9],
+					'arcount': (rawData[10] << 8) + rawData[11]
 				},
 				'question': [],
 				'answer': [],
@@ -135,22 +135,22 @@ class NetController:
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
 				'qname': rawData[index:nameEnd].decode('utf-8'),
-				'qtype': rawData[nameEnd + 1] << 8 + rawData[nameEnd + 2],
-				'qclass': rawData[nameEnd +3] << 8 + rawData[nameEnd + 4]
+				'qtype': (rawData[nameEnd + 1] << 8) + rawData[nameEnd + 2],
+				'qclass': (rawData[nameEnd +3] << 8) + rawData[nameEnd + 4]
 			}
 			index = nameEnd + 5
 			data['data.question'].append(question)
 		# construct answers
 		for i in range(data['data.header.ancount']):
-			index, answer = getResource(rawData, index)
+			index, answer = NetController.getResource(rawData, index)
 			data['data.answer'].append(answer)
 		# construct authorities
 		for i in range(data['data.header.nscount']):
-			index, answer = getResource(rawData, index)
+			index, answer = NetController.getResource(rawData, index)
 			data['data.authority'].append(answer)
 		# construct additionals
 		for i in range(data['data.header.arcount']):
-			index, answer = getResource(rawData, index)
+			index, answer = NetController.getResource(rawData, index)
 			data['data.additional'].append(answer)
 		return data
 
@@ -162,8 +162,8 @@ class NetController:
 		result += bytes([data['class'] >> 8])
 		result += bytes([data['class'] & 0b0000000011111111])
 		result += bytes([data['ttl'] >> 24])
-		result += bytes([data['ttl'] >> 16] & 0b0000000011111111)
-		result += bytes([data['ttl'] >> 8] & 0b000000000000000011111111)
+		result += bytes([(data['ttl'] >> 16) & 0b0000000011111111])
+		result += bytes([(data['ttl'] >> 8) & 0b000000000000000011111111])
 		result += bytes([data['ttl'] & 0b00000000000000000000000011111111])
 		result += bytes([data['rdlength'] >> 8])
 		result += bytes([data['rdlength'] & 0b0000000011111111])
@@ -189,11 +189,11 @@ class NetController:
 		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			# this is a compressed format name
 			offset = (rawData[startIndex] & 0b00111111) << 8 + rawData[startIndex + 1]
-			nameEnd = getNameEnd(rawData, offset)
+			nameEnd = NetController.getNameEnd(rawData, offset)
 			result['name'] = rawData[offset:nameEnd].decode('utf-8')
 			startIndex = nameEnd + 1
 		else:
-			nameEnd = getNameEnd(rawData, startIndex)
+			nameEnd = NetController.getNameEnd(rawData, startIndex)
 			result['name'] = rawData[startIndex:nameEnd]
 			startIndex = nameEnd + 1
 		# construct others
