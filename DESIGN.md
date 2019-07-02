@@ -84,7 +84,8 @@ data = {
 			'rdlength': int,
 			'rdata': bytes
 		}]
-	}
+	},
+	'rawData': bytes
 }
 ```
 
