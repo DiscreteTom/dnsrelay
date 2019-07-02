@@ -90,6 +90,8 @@ data = {
 }
 ```
 
+其中`name`或`qname`字段可能以`0b11`开头，表示引用包内其他名称。也可能为正常的字符串。如果是正常的字符串，则串尾包含`\0`
+
 ### 并发设计
 
 每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以NetController也需要并发控制
@@ -111,7 +113,8 @@ data = {
 ### 单元测试
 
 - 测试net模块
-  - 
+  - packageToDict函数测试用例：见`test/packageToDict.bin`
+  - dictToPackage函数把packageToDict函数生成的dict再转换为bytes和`test/packageToDict.bin`文件对比
 
 ### 集成测试
 
