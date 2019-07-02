@@ -44,8 +44,8 @@ data = {
 	},
 	'data': {
 		'header': {
-			'id': str,
-			'qr': int,
+			'id': bytes,
+			'qr': bool,
 			'opcode': int,
 			'aa': bool,
 			'tc': bool,
