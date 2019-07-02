@@ -48,7 +48,11 @@ class NetController:
 		'''
 		contruct an UDP package and send it to DNS server
 		'''
-		# TODO
+		import socket
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		address, msg = dictToPackage(data)
+		s.sendto(msg, (self.serverAddr, 53))
+		s.close()
 
 	def dictToPackage(self, data: dict) -> (tuple, bytes):
 		'''
