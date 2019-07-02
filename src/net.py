@@ -16,20 +16,34 @@ class NetController:
 		self.debugLevel = debugLevel
 		self.serverAddr = serverAddr
 
+		if self.debugLevel > 0:
+			print('NetController has been created...')
+		if self.debugLevel == 2:
+			print('serverAddr:', serverAddr)
+			print('dnsFileName:', dnsFileName)
+
 	def start(self) -> bool:
 		'''
 		start this net controller. it will start a UDP server
 
 		return False if error occurs, else return True
 		'''
+		# start a UDP server
 		import socket
 		address = ('', 53)
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		s.bind(address)
 
+		print('UDP server started.')
+
 		while True:
 			data = self.packageToDict(*s.recvfrom(2048))
-			self.processor.parse(data)
+			# self.processor.parse(data)
+
+			if self.debugLevel > 0:
+				print('got data from', data['address.ip'], ':', data['address.port'])
+			if self.debugLevel == 2:
+				print('got data:', data)
 		
 		s.close()
 		return True
@@ -41,6 +55,12 @@ class NetController:
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		address, msg = dictToPackage(data)
+
+		if self.debugLevel > 0:
+			print('reply to', address[0], ':', address[1])
+		if self.debugLevel == 2:
+			print(msg)
+
 		s.sendto(msg, address)
 		s.close()
 	
@@ -51,6 +71,12 @@ class NetController:
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		address, msg = dictToPackage(data)
+
+		if self.debugLevel > 0:
+			print('query to', self.serverAddr, ':', 53)
+		if self.debugLevel == 2:
+			print(msg)
+
 		s.sendto(msg, (self.serverAddr, 53))
 		s.close()
 
@@ -103,6 +129,8 @@ class NetController:
 	def packageToDict(self, rawData: bytes, address: tuple) -> dict:
 		'''
 		parse `rawData` and `address` to a dict and return
+
+		`address` should be `(ip: str, port: int)`
 		'''
 		# construct header and address
 		data = refdict({
