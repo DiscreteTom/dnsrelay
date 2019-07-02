@@ -61,41 +61,43 @@ class NetController:
 		# construct address
 		address = (data['address.ip'], data['address.port'])
 		# construct msg header
-		msg = address['data.id']
-		t = 0b00000000 if data['data.qr'] else 0b10000000
-		t |= data['data.opcode'] << 3
-		if data['data.aa']:
+		msg = data['data.header.id']
+		t = 0b10000000 if data['data.header.qr'] else 0b00000000
+		t |= data['data.header.opcode'] << 3
+		if data['data.header.aa']:
 			t |= 0b00000100 
-		if data['data.tc']:
+		if data['data.header.tc']:
 			t |= 0b00000010
-		if data['data.rd']:
+		if data['data.header.rd']:
 			t |= 0b00000001
 		msg += bytes([t])
-		t = 0b10000000 if data['data.ra'] else 0b00000000
-		t |= data['data.rcode']
+		t = 0b10000000 if data['data.header.ra'] else 0b00000000
+		t |= data['data.header.rcode']
 		msg += bytes([t])
 		msg += bytes([data['data.header.qdcount'] >> 8])
 		msg += bytes([data['data.header.qdcount'] & 0b0000000011111111])
 		msg += bytes([data['data.header.ancount'] >> 8])
 		msg += bytes([data['data.header.ancount'] & 0b0000000011111111])
+		msg += bytes([data['data.header.nscount'] >> 8])
+		msg += bytes([data['data.header.nscount'] & 0b0000000011111111])
 		msg += bytes([data['data.header.arcount'] >> 8])
 		msg += bytes([data['data.header.arcount'] & 0b0000000011111111])
 		# construct question
-		msg += bytes(data['data.question.qname'].encode('utf-8'))
-		msg += bytes([0])
-		msg += bytes([data['data.question.qtype'] >> 8])
-		msg += bytes([data['data.question.qtype'] & 0b0000000011111111])
-		msg += bytes([data['data.question.qclass'] >> 8])
-		msg += bytes([data['data.question.qclass'] & 0b0000000011111111])
+		for i in range(data['data.header.qdcount']):
+			msg += data['data.question'][i]['qname']
+			msg += bytes([data['data.question'][i]['qtype'] >> 8])
+			msg += bytes([data['data.question'][i]['qtype'] & 0b0000000011111111])
+			msg += bytes([data['data.question'][i]['qclass'] >> 8])
+			msg += bytes([data['data.question'][i]['qclass'] & 0b0000000011111111])
 		# construct answers
 		for i in range(data['data.header.ancount']):
-			msg += resourceToBytes(data['data.answer'][i])
+			msg += NetController.resourceToBytes(data['data.answer'][i])
 		# construct authorities
 		for i in range(data['data.header.nscount']):
-			msg += resourceToBytes(data['data.authority'][i])
+			msg += NetController.resourceToBytes(data['data.authority'][i])
 		# construct additionals
 		for i in range(data['data.header.arcount']):
-			msg += resourceToBytes(data['data.additional'][i])
+			msg += NetController.resourceToBytes(data['data.additional'][i])
 		return address, msg
 
 	def packageToDict(self, rawData: bytes, address: tuple) -> dict:
@@ -156,7 +158,7 @@ class NetController:
 
 	@classmethod
 	def resourceToBytes(cls, data: dict) -> bytes:
-		result = data['name'].encode('utf-8') + bytes([0])
+		result = data['name']
 		result += bytes([data['type'] >> 8])
 		result += bytes([data['type'] & 0b0000000011111111])
 		result += bytes([data['class'] >> 8])
@@ -192,7 +194,7 @@ class NetController:
 			startIndex += 2
 		else:
 			nameEnd = NetController.getNameEnd(rawData, startIndex)
-			result['name'] = rawData[startIndex:nameEnd]
+			result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
 			startIndex = nameEnd + 1
 		# construct others
 		result['type'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
@@ -206,9 +208,3 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
-
-net = NetController('', '')
-f = open('../test/packageToDict.bin', 'rb')
-data = f.read()
-f.close()
-print(net.packageToDict(data, ('0.0.0.0', 123)))
