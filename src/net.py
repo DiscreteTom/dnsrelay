@@ -52,7 +52,42 @@ class NetController:
 		# construct address
 		address = (data['address.ip'], data['address.port'])
 		# construct msg header
-		msg = address['data.id'] + 
+		msg = address['data.id']
+		t = 0b00000000 if data['data.qr'] else 0b10000000
+		t |= data['data.opcode'] << 3
+		if data['data.aa']:
+			t |= 0b00000100 
+		if data['data.tc']:
+			t |= 0b00000010
+		if data['data.rd']:
+			t |= 0b00000001
+		msg += bytes([t])
+		t = 0b10000000 if data['data.ra'] else 0b00000000
+		t |= data['data.rcode']
+		msg += bytes([t])
+		msg += bytes([data['data.qdcount'] >> 8])
+		msg += bytes([data['data.qdcount'] & 0b0000000011111111])
+		msg += bytes([data['data.ancount'] >> 8])
+		msg += bytes([data['data.ancount'] & 0b0000000011111111])
+		msg += bytes([data['data.arcount'] >> 8])
+		msg += bytes([data['data.arcount'] & 0b0000000011111111])
+		# construct question
+		msg += bytes(data['data.question.qname'].encode('utf-8'))
+		msg += bytes([0])
+		msg += bytes([data['data.question.qtype'] >> 8])
+		msg += bytes([data['data.question.qtype'] & 0b0000000011111111])
+		msg += bytes([data['data.question.qclass'] >> 8])
+		msg += bytes([data['data.question.qclass'] & 0b0000000011111111])
+		# construct answers
+		for i in range(data['data.ancount']):
+			msg += resourceToBytes(data['data.answer'][i])
+		# construct authorities
+		for i in range(data['data.nscount']):
+			msg += resourceToBytes(data['data.authority'][i])
+		# construct additionals
+		for i in range(data['data.arcount']):
+			msg += resourceToBytes(data['data.additional'][i])
+		return msg
 
 	def packageToDict(self, rawData: bytes, address: tuple) -> dict:
 		'''
@@ -109,6 +144,22 @@ class NetController:
 			index, answer = getResource(rawData, index)
 			data['data.additional'].append(answer)
 		return data
+
+	@classmethod
+	def resourceToBytes(cls, data: dict) -> bytes:
+		result = data['name'].encode('utf-8') + bytes([0])
+		result += bytes([data['type'] >> 8])
+		result += bytes([data['type'] & 0b0000000011111111])
+		result += bytes([data['class'] >> 8])
+		result += bytes([data['class'] & 0b0000000011111111])
+		result += bytes([data['ttl'] >> 24])
+		result += bytes([data['ttl'] >> 16] & 0b0000000011111111)
+		result += bytes([data['ttl'] >> 8] & 0b000000000000000011111111)
+		result += bytes([data['ttl'] & 0b00000000000000000000000011111111])
+		result += bytes([data['rdlength'] >> 8])
+		result += bytes([data['rdlength'] & 0b0000000011111111])
+		result += data['rdata']
+		return result
 
 	@classmethod
 	def getNameEnd(cls, rawData: bytes, startIndex: int) -> int:
