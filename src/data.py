@@ -28,7 +28,7 @@ class Data:
 		- if `url` is '0.0.0.0', return '0.0.0.0'
 		- if `url` is not found, return empty str
 		'''
-		# TODO
+		# TODO: test
 
 	def add(self, name: str, ttl: int, cls: str, type: str, value: str) -> None:
 		'''
