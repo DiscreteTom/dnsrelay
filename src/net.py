@@ -74,12 +74,12 @@ class NetController:
 		t = 0b10000000 if data['data.ra'] else 0b00000000
 		t |= data['data.rcode']
 		msg += bytes([t])
-		msg += bytes([data['data.qdcount'] >> 8])
-		msg += bytes([data['data.qdcount'] & 0b0000000011111111])
-		msg += bytes([data['data.ancount'] >> 8])
-		msg += bytes([data['data.ancount'] & 0b0000000011111111])
-		msg += bytes([data['data.arcount'] >> 8])
-		msg += bytes([data['data.arcount'] & 0b0000000011111111])
+		msg += bytes([data['data.header.qdcount'] >> 8])
+		msg += bytes([data['data.header.qdcount'] & 0b0000000011111111])
+		msg += bytes([data['data.header.ancount'] >> 8])
+		msg += bytes([data['data.header.ancount'] & 0b0000000011111111])
+		msg += bytes([data['data.header.arcount'] >> 8])
+		msg += bytes([data['data.header.arcount'] & 0b0000000011111111])
 		# construct question
 		msg += bytes(data['data.question.qname'].encode('utf-8'))
 		msg += bytes([0])
@@ -88,13 +88,13 @@ class NetController:
 		msg += bytes([data['data.question.qclass'] >> 8])
 		msg += bytes([data['data.question.qclass'] & 0b0000000011111111])
 		# construct answers
-		for i in range(data['data.ancount']):
+		for i in range(data['data.header.ancount']):
 			msg += resourceToBytes(data['data.answer'][i])
 		# construct authorities
-		for i in range(data['data.nscount']):
+		for i in range(data['data.header.nscount']):
 			msg += resourceToBytes(data['data.authority'][i])
 		# construct additionals
-		for i in range(data['data.arcount']):
+		for i in range(data['data.header.arcount']):
 			msg += resourceToBytes(data['data.additional'][i])
 		return address, msg
 
@@ -131,7 +131,7 @@ class NetController:
 		})
 		# construct questions
 		index = 12 # index of rawData
-		for i in range(data['data.qdcount']):
+		for i in range(data['data.header.qdcount']):
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
 				'qname': rawData[index:nameEnd].decode('utf-8'),
@@ -141,15 +141,15 @@ class NetController:
 			index = nameEnd + 5
 			data['data.question'].append(question)
 		# construct answers
-		for i in range(data['data.ancount']):
+		for i in range(data['data.header.ancount']):
 			index, answer = getResource(rawData, index)
 			data['data.answer'].append(answer)
 		# construct authorities
-		for i in range(data['data.nscount']):
+		for i in range(data['data.header.nscount']):
 			index, answer = getResource(rawData, index)
 			data['data.authority'].append(answer)
 		# construct additionals
-		for i in range(data['data.arcount']):
+		for i in range(data['data.header.arcount']):
 			index, answer = getResource(rawData, index)
 			data['data.additional'].append(answer)
 		return data
@@ -208,3 +208,9 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']].decode('utf-8')
 		startIndex += result['rdlength']
 		return startIndex, result
+
+net = NetController('', '')
+f = open('../test/packageToDict.bin', 'rb')
+data = f.read()
+f.close()
+print(net.packageToDict(data, ('0.0.0.0', 123)))
