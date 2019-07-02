@@ -157,7 +157,8 @@ class NetController:
 				'answer': [],
 				'authority': [],
 				'additional': []
-			}
+			},
+			'rawData': rawData
 		})
 		# construct questions
 		index = 12 # index of rawData
