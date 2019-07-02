@@ -37,7 +37,11 @@ class NetController:
 		'''
 		construct an UDP package and send it to the client
 		'''
-		# TODO
+		import socket
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		address, msg = dictToPackage(data)
+		s.sendto(msg, address)
+		s.close()
 	
 	def query(self, data: dict) -> None:
 		'''
@@ -87,7 +91,7 @@ class NetController:
 		# construct additionals
 		for i in range(data['data.arcount']):
 			msg += resourceToBytes(data['data.additional'][i])
-		return msg
+		return address, msg
 
 	def packageToDict(self, rawData: bytes, address: tuple) -> dict:
 		'''
