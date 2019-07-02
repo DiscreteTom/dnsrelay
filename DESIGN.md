@@ -38,10 +38,10 @@
 
 ```python
 data = {
-	'address': (
-		str, # ip
-		int # port
-	),
+	'address': {
+		'ip': str,
+		'port':int
+	},
 	'data': {
 		'header': {
 			'id': str,
