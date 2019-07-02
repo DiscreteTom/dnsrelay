@@ -20,8 +20,6 @@
 - 网络通信，包括直接回复客户端和向DNS服务器查询后回复客户端
 - 数据包内数据与python内置数据类型dict的转换
 
-需要并发处理
-
 ### processor模块
 
 负责对dict类型的数据包进行解析，根据协议作出一些行为。需要并发处理
@@ -94,7 +92,7 @@ data = {
 
 ### 并发设计
 
-每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以NetController也需要并发控制
+每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以Processor调用NetController.reply和NetController.query的时候也需要加锁。并发控制完全由Processor模块负责
 
 ### 正常检索地址
 
