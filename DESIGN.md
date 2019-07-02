@@ -57,34 +57,34 @@ data = {
 			'nscount': int,
 			'arcount': int
 		},
-		'question': {
-			'qname': str,
-			'qtype': str,
-			'qclass': str
-		},
+		'question': [{
+			'qname': bytes,
+			'qtype': int,
+			'qclass': int
+		}],
 		'answer': [{
-			'name': str,
-			'type': str,
-			'class': str,
+			'name': bytes,
+			'type': int,
+			'class': int,
 			'ttl': int,
 			'rdlength': int,
-			'rddata': bytes
+			'rdata': bytes
 		}],
 		'authority': [{ # same as the format of data['answer']
-			'name': str,
-			'type': str,
-			'class': str,
+			'name': bytes,
+			'type': int,
+			'class': int,
 			'ttl': int,
 			'rdlength': int,
-			'rddata': bytes
+			'rdata': bytes
 		}],
 		'additional': [{ # same as the format of data['answer']
-			'name': str,
-			'type': str,
-			'class': str,
+			'name': bytes,
+			'type': int,
+			'class': int,
 			'ttl': int,
 			'rdlength': int,
-			'rddata': bytes
+			'rdata': bytes
 		}]
 	}
 }
@@ -109,6 +109,9 @@ data = {
 ## 测试用例以及运行结果
 
 ### 单元测试
+
+- 测试net模块
+  - 
 
 ### 集成测试
 
