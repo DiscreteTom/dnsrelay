@@ -20,8 +20,6 @@
 - 网络通信，包括直接回复客户端和向DNS服务器查询后回复客户端
 - 数据包内数据与python内置数据类型dict的转换
 
-需要并发处理
-
 ### processor模块
 
 负责对dict类型的数据包进行解析，根据协议作出一些行为。需要并发处理
@@ -94,7 +92,7 @@ data = {
 
 ### 并发设计
 
-每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以NetController也需要并发控制
+每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以Processor调用NetController.reply和NetController.query的时候也需要加锁。并发控制完全由Processor模块负责
 
 ### 正常检索地址
 
@@ -113,8 +111,28 @@ data = {
 ### 单元测试
 
 - 测试net模块
-  - packageToDict函数测试用例：见`test/packageToDict.bin`
-  - dictToPackage函数把packageToDict函数生成的dict再转换为bytes和`test/packageToDict.bin`文件对比
+
+主要测试packageToDict函数和dictToPackage函数是否运行正确。使用测试代码如下：
+
+```python
+net = NetController('', '')
+f = open('../test/packageToDict.bin', 'rb')
+data = f.read()
+f.close()
+dictData = net.packageToDict(data, ('', 0))
+print(dictData)
+address, binData = net.dictToPackage(dictData)
+print(binData)
+```
+
+先把测试文件packageToDict.bin中的二进制数据使用packageToDict转换为dict，然后再转换为二进制数据，检测输出是否和源文件相同。输出结果：
+
+```python
+refdict({'address': {'ip': '', 'port': 0}, 'data': {'header': {'id': b'\x00\x02', 'qr': True, 'opcode': 0, 'aa': False, 'tc': False, 'rd': True, 'ra': True, 'rcode': 0, 'qdcount': 1, 'ancount': 3, 'nscount': 0, 'arcount': 0}, 'question': [{'qname': b'\x03www\x05baidu\x03com', 'qtype': 1, 'qclass': 1}], 'answer': [{'name': b'\xc0\x0c', 'type': 5, 'class': 1, 'ttl': 272, 'rdlength': 15, 'rdata': b'\x03www\x01a\x06shifen\xc0\x16'}, {'name': b'\xc0+', 'type': 1, 'class': 1, 'ttl': 107, 'rdlength': 4, 'rdata': b"'\x9cB\x0e"}, {'name': b'\xc0+', 'type': 1, 'class': 1, 'ttl': 107, 'rdlength': 4, 'rdata': b"'\x9cB\x12"}], 'authority': [], 'additional': []}})
+b"\x00\x02\x81\x80\x00\x01\x00\x03\x00\x00\x00\x00\x03www\x05baidu\x03com\x00\x01\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x01\x10\x00\x0f\x03www\x01a\x06shifen\xc0\x16\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x0e\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x12"
+```
+
+结果正确
 
 ### 集成测试
 
