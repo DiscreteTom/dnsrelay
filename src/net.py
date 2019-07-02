@@ -12,7 +12,7 @@ class NetController:
 
 		`debugLevel` should in `[0, 1, 2]`
 		'''
-		self.processor = Processor(self, dnsFileName, debugLevel)
+		# self.processor = Processor(self, dnsFileName, debugLevel)
 		self.debugLevel = debugLevel
 		self.serverAddr = serverAddr
 
@@ -134,7 +134,7 @@ class NetController:
 		for i in range(data['data.header.qdcount']):
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
-				'qname': rawData[index:nameEnd].decode('utf-8'),
+				'qname': rawData[index:nameEnd],
 				'qtype': (rawData[nameEnd + 1] << 8) + rawData[nameEnd + 2],
 				'qclass': (rawData[nameEnd +3] << 8) + rawData[nameEnd + 4]
 			}
@@ -188,24 +188,22 @@ class NetController:
 		result = {}
 		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			# this is a compressed format name
-			offset = (rawData[startIndex] & 0b00111111) << 8 + rawData[startIndex + 1]
-			nameEnd = NetController.getNameEnd(rawData, offset)
-			result['name'] = rawData[offset:nameEnd].decode('utf-8')
-			startIndex = nameEnd + 1
+			result['name'] = rawData[startIndex:startIndex + 2]
+			startIndex += 2
 		else:
 			nameEnd = NetController.getNameEnd(rawData, startIndex)
 			result['name'] = rawData[startIndex:nameEnd]
 			startIndex = nameEnd + 1
 		# construct others
-		result['type'] = rawData[startIndex] << 8 + rawData[startIndex + 1]
+		result['type'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
-		result['class'] = rawData[startIndex] << 8 + rawData[startIndex + 1]
+		result['class'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
-		result['ttl'] = rawData[startIndex] << 24 + rawData[startIndex + 1] << 16 + rawData[startIndex + 2] << 8 + rawData[startIndex + 3]
+		result['ttl'] = (rawData[startIndex] << 24) + (rawData[startIndex + 1] << 16) + (rawData[startIndex + 2] << 8) + rawData[startIndex + 3]
 		startIndex += 4
-		result['rdlength'] = rawData[startIndex] << 8 + rawData[startIndex + 1]
+		result['rdlength'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
-		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']].decode('utf-8')
+		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
 
