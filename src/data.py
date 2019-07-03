@@ -36,6 +36,7 @@ class Data:
 		else:
 			return ''
 
+
 	def add(self, name: str, ttl: int, cls: str, type: str, value: str) -> None:
 		'''
 		add a record to data file
