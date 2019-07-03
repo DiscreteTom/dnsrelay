@@ -41,7 +41,7 @@ class Data:
 		'''
 		add a record to data file
 		'''
-		# TODO: add record to self.data
+		#ODO: add record to self.data
 		self.data[name] = value
 		# save current data to data file
 		f = open(self.filename, 'w', encoding='utf-8')
