@@ -29,13 +29,19 @@ class Data:
 		- if `url` is not found, return empty str
 		'''
 		# TODO: 
+		if url == '0.0.0.0' :
+			return '0.0.0.0'
+		elif url in self.data :
+			return self.data[url]
+		else:
+			return ''
 
 	def add(self, name: str, ttl: int, cls: str, type: str, value: str) -> None:
 		'''
 		add a record to data file
 		'''
 		# TODO: add record to self.data
-
+		self.data[name] = value
 		# save current data to data file
 		f = open(self.filename, 'w', encoding='utf-8')
 		yaml.safe_dump(self.data, f)
