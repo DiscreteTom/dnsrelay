@@ -12,7 +12,7 @@ class NetController:
 
 		`debugLevel` should in `[0, 1, 2]`
 		'''
-		# self.processor = Processor(self, dnsFileName, debugLevel)
+		self.processor = Processor(self, dnsFileName, debugLevel)
 		self.debugLevel = debugLevel
 		self.serverAddr = serverAddr
 
@@ -38,7 +38,7 @@ class NetController:
 
 		while True:
 			data = self.packageToDict(*s.recvfrom(2048))
-			# self.processor.parse(data)
+			self.processor.parse(data)
 
 			if self.debugLevel > 0:
 				print('got data from', data['address.ip'], ':', data['address.port'])
@@ -54,7 +54,7 @@ class NetController:
 		'''
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		address, msg = dictToPackage(data)
+		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
 			print('reply to', address[0], ':', address[1])
@@ -70,7 +70,7 @@ class NetController:
 		'''
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		address, msg = dictToPackage(data)
+		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
 			print('query to', self.serverAddr, ':', 53)
@@ -157,14 +157,15 @@ class NetController:
 				'answer': [],
 				'authority': [],
 				'additional': []
-			}
+			},
+			'rawData': rawData
 		})
 		# construct questions
 		index = 12 # index of rawData
 		for i in range(data['data.header.qdcount']):
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
-				'qname': rawData[index:nameEnd],
+				'qname': rawData[index:nameEnd + 1],
 				'qtype': (rawData[nameEnd + 1] << 8) + rawData[nameEnd + 2],
 				'qclass': (rawData[nameEnd +3] << 8) + rawData[nameEnd + 4]
 			}
@@ -204,8 +205,12 @@ class NetController:
 	def getNameEnd(cls, rawData: bytes, startIndex: int) -> int:
 		'''
 		return the tail index of the name
+
+		the tail of a name can be '\\0' or two bytes start with 0b11
 		'''
-		while rawData[startIndex] != 0:
+		while rawData[startIndex] != 0 and (rawData[startIndex] & 0b11000000) != 0b11000000:
+			startIndex += 1
+		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			startIndex += 1
 		return startIndex
 
@@ -216,14 +221,9 @@ class NetController:
 		'''
 		# construct name
 		result = {}
-		if rawData[startIndex] & 0b11000000 == 0b11000000:
-			# this is a compressed format name
-			result['name'] = rawData[startIndex:startIndex + 2]
-			startIndex += 2
-		else:
-			nameEnd = NetController.getNameEnd(rawData, startIndex)
-			result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
-			startIndex = nameEnd + 1
+		nameEnd = NetController.getNameEnd(rawData, startIndex)
+		result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
+		startIndex = nameEnd + 1
 		# construct others
 		result['type'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
@@ -236,3 +236,6 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
+
+net = NetController('10.3.9.5', 'test.yml')
+net.start()
