@@ -165,7 +165,7 @@ class NetController:
 		for i in range(data['data.header.qdcount']):
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
-				'qname': rawData[index:nameEnd],
+				'qname': rawData[index:nameEnd + 1],
 				'qtype': (rawData[nameEnd + 1] << 8) + rawData[nameEnd + 2],
 				'qclass': (rawData[nameEnd +3] << 8) + rawData[nameEnd + 4]
 			}
@@ -205,8 +205,12 @@ class NetController:
 	def getNameEnd(cls, rawData: bytes, startIndex: int) -> int:
 		'''
 		return the tail index of the name
+
+		the tail of a name can be '\\0' or two bytes start with 0b11
 		'''
-		while rawData[startIndex] != 0:
+		while rawData[startIndex] != 0 and (rawData[startIndex] & 0b11000000) != 0b11000000:
+			startIndex += 1
+		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			startIndex += 1
 		return startIndex
 
@@ -217,14 +221,9 @@ class NetController:
 		'''
 		# construct name
 		result = {}
-		if rawData[startIndex] & 0b11000000 == 0b11000000:
-			# this is a compressed format name
-			result['name'] = rawData[startIndex:startIndex + 2]
-			startIndex += 2
-		else:
-			nameEnd = NetController.getNameEnd(rawData, startIndex)
-			result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
-			startIndex = nameEnd + 1
+		nameEnd = NetController.getNameEnd(rawData, startIndex)
+		result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
+		startIndex = nameEnd + 1
 		# construct others
 		result['type'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
