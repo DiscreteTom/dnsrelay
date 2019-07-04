@@ -205,8 +205,12 @@ class NetController:
 	def getNameEnd(cls, rawData: bytes, startIndex: int) -> int:
 		'''
 		return the tail index of the name
+
+		the tail of a name can be '\\0' or two bytes start with 0b11
 		'''
-		while rawData[startIndex] != 0:
+		while rawData[startIndex] != 0 and rawData[startIndex] & 0b11000000 == 0b11000000:
+			startIndex += 1
+		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			startIndex += 1
 		return startIndex
 
