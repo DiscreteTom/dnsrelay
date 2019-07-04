@@ -208,7 +208,7 @@ class NetController:
 
 		the tail of a name can be '\\0' or two bytes start with 0b11
 		'''
-		while rawData[startIndex] != 0 and rawData[startIndex] & 0b11000000 == 0b11000000:
+		while rawData[startIndex] != 0 and (rawData[startIndex] & 0b11000000) != 0b11000000:
 			startIndex += 1
 		if rawData[startIndex] & 0b11000000 == 0b11000000:
 			startIndex += 1
