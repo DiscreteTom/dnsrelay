@@ -165,7 +165,7 @@ class NetController:
 		for i in range(data['data.header.qdcount']):
 			nameEnd = NetController.getNameEnd(rawData, index)
 			question = {
-				'qname': rawData[index:nameEnd],
+				'qname': rawData[index:nameEnd + 1],
 				'qtype': (rawData[nameEnd + 1] << 8) + rawData[nameEnd + 2],
 				'qclass': (rawData[nameEnd +3] << 8) + rawData[nameEnd + 4]
 			}
