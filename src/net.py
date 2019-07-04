@@ -221,14 +221,9 @@ class NetController:
 		'''
 		# construct name
 		result = {}
-		if rawData[startIndex] & 0b11000000 == 0b11000000:
-			# this is a compressed format name
-			result['name'] = rawData[startIndex:startIndex + 2]
-			startIndex += 2
-		else:
-			nameEnd = NetController.getNameEnd(rawData, startIndex)
-			result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
-			startIndex = nameEnd + 1
+		nameEnd = NetController.getNameEnd(rawData, startIndex)
+		result['name'] = rawData[startIndex:nameEnd + 1] # include the last '\0'
+		startIndex = nameEnd + 1
 		# construct others
 		result['type'] = (rawData[startIndex] << 8) + rawData[startIndex + 1]
 		startIndex += 2
