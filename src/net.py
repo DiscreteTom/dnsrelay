@@ -62,6 +62,7 @@ class NetController:
 			print(msg)
 
 		s.sendto(msg, address)
+
 		s.close()
 	
 	def query(self, data: dict) -> None:
@@ -78,6 +79,12 @@ class NetController:
 			print(msg)
 
 		s.sendto(msg, (self.serverAddr, 53))
+
+		# addCode
+		data = self.packageToDict(*s.recvfrom(2048))
+		self.processor.parse(data)
+		# addCode
+
 		s.close()
 
 	def dictToPackage(self, data: dict) -> (tuple, bytes):
