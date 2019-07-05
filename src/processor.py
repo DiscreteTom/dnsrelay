@@ -85,7 +85,6 @@ class Processor:
 	def doParse(self, data: dict):
 		newData = data.copy();
 		if data['data']['header']['qr']:
-			print(1)
 			if self.queryList.get(data['data']['header']['id'], None) != None:
 				self.parseNames(newData)
 				data['address'] = self.queryList.pop(data['data']['header']['id'], {})
