@@ -21,6 +21,8 @@ class NetController:
 		if self.debugLevel == 2:
 			print('serverAddr:', serverAddr)
 			print('dnsFileName:', dnsFileName)
+		
+		self.s = None # socket
 
 	def start(self) -> bool:
 		'''
@@ -31,13 +33,13 @@ class NetController:
 		# start a UDP server
 		import socket
 		address = ('', 53)
-		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		s.bind(address)
+		self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		self.s.bind(address)
 
 		print('UDP server started.')
 
 		while True:
-			data = self.packageToDict(*s.recvfrom(2048))
+			data = self.packageToDict(*self.s.recvfrom(2048))
 			self.processor.parse(data)
 
 			if self.debugLevel > 0:
@@ -45,7 +47,7 @@ class NetController:
 			if self.debugLevel == 2:
 				print('got data:', data)
 		
-		s.close()
+		self.s.close()
 		return True
 	
 	def reply(self, data: dict) -> None:
@@ -53,7 +55,6 @@ class NetController:
 		construct an UDP package and send it to the client
 		'''
 		import socket
-		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
@@ -61,16 +62,15 @@ class NetController:
 		if self.debugLevel == 2:
 			print(msg)
 
-		s.sendto(msg, address)
+		self.s.sendto(msg, address)
 
-		s.close()
-	
 	def query(self, data: dict) -> None:
 		'''
 		contruct an UDP package and send it to DNS server
 		'''
 		import socket
-		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		import select
+		qs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # query socket
 		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
@@ -78,14 +78,15 @@ class NetController:
 		if self.debugLevel == 2:
 			print(msg)
 
-		s.sendto(msg, (self.serverAddr, 53))
+		qs.sendto(msg, (self.serverAddr, 53))
 
-		# addCode
-		data = self.packageToDict(*s.recvfrom(2048))
-		self.processor.parse(data)
-		# addCode
+		qs.setblocking(0)
+		ready = select.select([qs], [], [], 2) # timeout: 2s
+		if ready[0]:
+			data = self.packageToDict(*qs.recvfrom(2048))
+			self.processor.parse(data)
 
-		s.close()
+		qs.close()
 
 	def dictToPackage(self, data: dict) -> (tuple, bytes):
 		'''
@@ -243,6 +244,3 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
-
-net = NetController('10.3.9.5', 'test.yml')
-net.start()
