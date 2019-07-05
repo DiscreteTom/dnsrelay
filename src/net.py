@@ -69,6 +69,7 @@ class NetController:
 		contruct an UDP package and send it to DNS server
 		'''
 		import socket
+		import select
 		qs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # query socket
 		address, msg = self.dictToPackage(data)
 
@@ -79,8 +80,11 @@ class NetController:
 
 		qs.sendto(msg, (self.serverAddr, 53))
 
-		data = self.packageToDict(*qs.recvfrom(2048))
-		self.processor.parse(data)
+		qs.setblocking(0)
+		ready = select.select([qs], [], [], 2) # timeout: 2s
+		if ready[0]:
+			data = self.packageToDict(*qs.recvfrom(2048))
+			self.processor.parse(data)
 
 		qs.close()
 
@@ -240,6 +244,3 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
-
-net = NetController('10.3.9.5', 'test.yml')
-net.start()
