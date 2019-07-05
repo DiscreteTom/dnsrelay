@@ -42,7 +42,7 @@ def bytesNameToStr(name: bytes):
 		newNum = newName[num] + 1
 		newName = newName[0: num] + bytes(b'.') + newName[num + 1:]
 		num += newNum
-	return str(newName)
+	return newName.decode('utf-8')
 
 def bytesIpToStr(ip: bytes):
 	'''
@@ -50,8 +50,8 @@ def bytesIpToStr(ip: bytes):
 	'''
 	ipStr = str()
 	for i in range(0, 3):
-		ipStr += str(bytes[i]) + '.'
-	ipStr += str(bytes[3])
+		ipStr += str(ip[i]) + '.'
+	ipStr += str(ip[3])
 	return ipStr
 
 class Processor:
@@ -85,13 +85,13 @@ class Processor:
 		newData = data.copy();
 		if data['data']['header']['qr']:
 			if self.queryList.get(data['data']['header']['id'], None) != None:
-				self.parse(newData)
+				self.parseNames(newData)
 				print(self.queryList)
 				data['address'] = self.queryList.pop(data['data']['header']['id'], {})
 				for i in range(0, newData['data']['header']['ancount']):
 					if newData['data']['answer'][i]['rdlength'] == 4:
-						self.data.add(bytesNameToStr(newData['data']['answer'][0]['name']), bytesIpToStr(newData['data']['answer'][0]['rdata']))
-				self.net.reply(data)
+						self.data.add(bytesNameToStr(newData['data']['answer'][0]['name']), 0, 0, 0, bytesIpToStr(newData['data']['answer'][0]['rdata']))
+				self.net.query(refdict(data))
 			return;
 		else:
 			# 回复给客户端的信息
@@ -127,9 +127,10 @@ class Processor:
 			self.parseNames(newData)
 			name = bytesNameToStr(newData['data']['question'][0]['qname'])
 			ipStr = self.data.find(name)											# 进行查询
+			print(ipStr, newData['data']['question'][0]['qtype'])
 			if ipStr[0] == '' or newData['data']['question'][0]['qtype'] != 1:		# 没有记录，向服务器查询
 				self.queryList[data['data']['header']['id']] = data['address']
-				self.net.query(data)
+				self.net.query(refdict(data))
 				return;
 			elif ipStr[0] == '0.0.0.0':												# 无效域名
 				replyData['data']['header']['rcode'] = 3
