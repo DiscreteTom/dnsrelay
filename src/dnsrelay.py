@@ -11,7 +11,7 @@ if __name__ == '__main__':
 	parser.add_argument('filename', nargs='?', default='dnsrelay.yml', help='dns file name, "dnsrelay.yml" by default')
 
 	# parse args
-	args = parser.parse_args()
+	args = vars(parser.parse_args())
 
 	# start relay controller
 
