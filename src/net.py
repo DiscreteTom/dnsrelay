@@ -40,7 +40,10 @@ class NetController:
 
 		while True:
 			rawData, address = self.s.recvfrom(2048)
-			data = self.packageToDict(*self.s.recvfrom(2048))
+			try:
+				data = self.packageToDict(*self.s.recvfrom(2048))
+			except:
+				continue
 			self.processor.parse(data)
 
 			# if self.debugLevel > 0:

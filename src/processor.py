@@ -92,7 +92,7 @@ class Processor:
 				for i in range(0, newData['data']['header']['ancount']):
 					if newData['data']['answer'][i]['rdlength'] == 4:
 						self.data.add(newData['data']['answer'][0]['name'], 0, 0, 0, bytesIpToStr(newData['data']['answer'][0]['rdata']))
-				self.net.query(refdict(data))
+				self.net.reply(refdict(data))
 			return;
 		else:
 			# 回复给客户端的信息
