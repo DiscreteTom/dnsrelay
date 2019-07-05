@@ -29,7 +29,6 @@ class Data:
 		- if `url` is not found, return empty str
 		'''
 		#TODO: 
-		print(url, self.data, url in self.data)
 		if url in self.data :
 			return self.data[url]
 		else:

@@ -77,22 +77,22 @@ class Processor:
 		may be called many times simultaneously, need concurrency control
 		'''
 		# TODO: parse data and get result
-		# t1 = threading.Thread(target=self.doParse, args = (data,))
-		# t1.start()
-		self.doParse(data)
+		t1 = threading.Thread(target=self.doParse, args = (data,))
+		t1.start()
+		# self.doParse(data)
 
 
 	def doParse(self, data: dict):
 		newData = data.copy();
 		if data['data']['header']['qr']:
+			print(1)
 			if self.queryList.get(data['data']['header']['id'], None) != None:
 				self.parseNames(newData)
-				print(self.queryList)
 				data['address'] = self.queryList.pop(data['data']['header']['id'], {})
+				self.net.reply(data)
 				for i in range(0, newData['data']['header']['ancount']):
-					if newData['data']['answer'][i]['rdlength'] == 4:
-						self.data.add(newData['data']['answer'][0]['name'], 0, 0, 0, bytesIpToStr(newData['data']['answer'][0]['rdata']))
-				self.net.reply(refdict(data))
+					if newData['data']['answer'][i]['type'] == 1 and len(newData['data']['answer'][i]['rdata']) == 4:
+						self.data.add(bytesNameToStr(newData['data']['question'][0]['qname'][:-1]), 0, 0, 0, bytesIpToStr(newData['data']['answer'][i]['rdata']))
 			return;
 		else:
 			# 回复给客户端的信息
@@ -110,7 +110,7 @@ class Processor:
 						'tc': False,
 						'rd': True,
 						'ra': False,
-						'rcode': data['data']['header']['rcode'],
+						'rcode': 0,
 						'qdcount': data['data']['header']['qdcount'],
 						'ancount': 0,
 						'nscount': 0,
@@ -126,13 +126,11 @@ class Processor:
 
 			# 处理数据
 			self.parseNames(newData)
-			name = bytesNameToStr(newData['data']['question'][0]['qname'])
-			print(name)
-			ipStr = self.data.find(newData['data']['question'][0]['qname'])			# 进行查询
-			print(ipStr, newData['data']['question'][0]['qtype'])
+			name = bytesNameToStr(newData['data']['question'][0]['qname'])[:-1]
+			ipStr = self.data.find(name)											# 进行查询
 			if ipStr[0] == '' or newData['data']['question'][0]['qtype'] != 1:		# 没有记录，向服务器查询
 				self.queryList[data['data']['header']['id']] = data['address']
-				self.net.query(refdict(data))
+				self.net.query(data)
 				return;
 			elif ipStr[0] == '0.0.0.0':												# 无效域名
 				replyData['data']['header']['rcode'] = 3
@@ -149,129 +147,6 @@ class Processor:
 						'rdata': ip
 					})
 			self.net.reply(refdict(replyData))
-
-			
-		'''
-		if data['data']['header']['qr']:
-			# 是服务端回复过来的信息，处理后发送给客户端
-			if(self.queryList.get(data['data']['header']['id'], None) != None):
-				self.parseNames(newData);
-				oldReplyData = self.queryList.pop(data['data']['header']['id'])
-				oldReplyData['data']['header']['opcode'] = newData['data']['header']['opcode']
-				oldReplyData['data']['header']['aa'] = newData['data']['header']['aa']
-				oldReplyData['data']['header']['rcode'] = newData['data']['header']['rcode']
-				oldReplyData['data']['header']['qdcount'] += newData['data']['header']['qdcount']
-				oldReplyData['data']['header']['ancount'] = newData['data']['header']['ancount']
-				oldReplyData['data']['header']['nscount'] = newData['data']['header']['nscount']
-				oldReplyData['data']['header']['arcount'] = newData['data']['header']['arcount']
-				oldReplyData['data']['question'] += newData['data']['question']
-				oldReplyData['data']['answer'] = newData['data']['answer']
-				oldReplyData['data']['authority'] = newData['data']['authority']
-				oldReplyData['data']['additional'] = newData['data']['additional']
-				print(oldReplyData)
-				self.net.reply(refdict(oldReplyData))											# 回复数据
-				for i in range(0, newData['data']['header']['qdcount']):
-					if newData['data']['question'][i]['qtype'] == 1:
-						for j in range(0, newData['data']['header']['ancount']):
-							if newData['data']['answer'][j]['name'] == newData['data']['question'][i]['qname'] and newData['data']['answer'][j]['type'] == 1 and newData['data']['answer'][j]['rdlength'] == 4:
-								self.data.add(bytesNameToStr(newData['data']['answer'][j]['qname']), bytesIpToStr(newData['data']['answer'][j]['rdata']))
-		else:
-			# 是客户端发来的请求，处理
-
-			# 回复给客户端的信息
-			replyData = {
-				'address': {
-					'ip': data['address']['ip'],
-					'port': data['address']['port'],
-				},
-				'data': {
-					'header': {
-						'id': data['data']['header']['id'],
-						'qr': True,
-						'opcode': data['data']['header']['opcode'],
-						'aa': False,
-						'tc': False,
-						'rd': True,
-						'ra': False,
-						'rcode': data['data']['header']['rcode'],
-						'qdcount': 0,
-						'ancount': 0,
-						'nscount': 0,
-						'arcount': 0
-					},
-					'question': [],
-					'answer': [],
-					'authority': [],
-					'additional': []
-				},
-				'rawData': data['rawData']
-			}
-			# 向服务器发送的查询信息
-			queryData = {
-				'address': {
-					'ip': self.defaultIp,
-					'port': 8000,
-				},
-				'data': {
-					'header': {
-						'id': data['data']['header']['id'],
-						'qr': False,
-						'opcode': data['data']['header']['opcode'],
-						'aa': False,
-						'tc': False,
-						'rd': data['data']['header']['rd'],
-						'ra': False,
-						'rcode': data['data']['header']['rcode'],
-						'qdcount': 0,
-						'ancount': 0,
-						'nscount': 0,
-						'arcount': 0
-					},
-					'question': [],
-					'answer': [],
-					'authority': [],
-					'additional': []
-				},
-				'rawData': data['rawData']
-			}
-			# 处理数据
-			self.parseNames(newData);
-
-			# 逐条处理各项请求
-			needQuery = False
-			for i in range(0, newData['data']['header']['qdcount']):
-				qname = newData['data']['question'][i]['qname']
-				ipStr = self.data.find(bytesNameToStr(qname))							# 进行查询
-				if ipStr[0] == '' or newData['data']['question'][i]['qtype'] != 1:		# 没有记录，向服务器查询
-					queryData['data']['header']['qdcount'] += 1
-					queryData['data']['question'].append(data['data']['question'][i])
-					needQuery = True
-				elif ipStr[0] == '0.0.0.0':												# 无效域名
-					replyData['data']['header']['rcode'] = 3
-				else:																	# 有效域名
-					for j in range(0, len(ipStr)):
-						ip = bytes(bytearray(list(map(int, ipStr[j].split('.')))))
-						replyData['data']['header']['qdcount'] += 1
-						replyData['data']['question'].append(newData['data']['question'][i])
-						replyData['data']['header']['ancount'] += 1
-						replyData['data']['answer'].append({
-							'name': newData['data']['question'][i]['qname'],
-							'type': newData['data']['question'][i]['qtype'],
-							'class': 1,
-							'ttl': 86400,
-							'rdlength': 4,
-							'rdata': ip
-						})
-			if(needQuery):
-				self.queryList[newData['data']['header']['id']] = replyData
-				self.net.query(refdict(queryData))												# 发送数据
-			else:
-				0
-				self.net.reply(refdict(replyData))												# 回复数据
-			'''
-			# print(replyData)
-			# print(queryData)
-		
 		
 	def parseNames(self, newData: dict):
 		rawData = newData['rawData']

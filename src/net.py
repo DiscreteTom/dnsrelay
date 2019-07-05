@@ -39,24 +39,13 @@ class NetController:
 		print('UDP server started.')
 
 		while True:
-			rawData, address = self.s.recvfrom(2048)
-			try:
-				data = self.packageToDict(*self.s.recvfrom(2048))
-			except:
-				continue
+			data = self.packageToDict(*self.s.recvfrom(2048))
 			self.processor.parse(data)
 
-			# if self.debugLevel > 0:
-			# 	print('got data from', data['address.ip'], ':', data['address.port'])
-			# if self.debugLevel == 2:
-			# 	print('got data:', data)
-			
-			# qs = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			# qs.sendto(rawData, (self.serverAddr, 53))
-			# rData, t = qs.recvfrom(2048)
-			# self.s.sendto(rData, address)
-			# qs.close()
-			
+			if self.debugLevel > 0:
+				print('got data from', data['address.ip'], ':', data['address.port'])
+			if self.debugLevel == 2:
+				print('got data:', data)
 		
 		self.s.close()
 		return True
@@ -67,7 +56,6 @@ class NetController:
 		'''
 		import socket
 		address, msg = self.dictToPackage(data)
-		print(address)
 
 		if self.debugLevel > 0:
 			print('reply to', address[0], ':', address[1])
