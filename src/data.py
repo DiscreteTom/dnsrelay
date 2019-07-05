@@ -41,7 +41,10 @@ class Data:
 		'''
 		#ODO: add record to self.data
 		if name in self.data	:
-			self.data[name].append(value)
+			if value in self.data[name]	:
+				pass
+			else	:
+				self.data[name].append(value)
 		else	:
 			self.data[name] = [value]
 		# save current data to data file
