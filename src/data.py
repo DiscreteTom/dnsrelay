@@ -20,9 +20,6 @@ class Data:
 		# load data from yaml file
 		f = open(filename, encoding='utf-8')
 		self.data = yaml.safe_load(f)
-		if(self.data == None):
-			self.data = {}
-			self.data['a'] = ['0.0.0.0']
 		f.close()
 	
 	def find(self, url: str) -> list:
@@ -32,6 +29,7 @@ class Data:
 		- if `url` is not found, return empty str
 		'''
 		#TODO: 
+		print(url, self.data, url in self.data)
 		if url in self.data :
 			return self.data[url]
 		else:
@@ -44,10 +42,10 @@ class Data:
 		'''
 		#ODO: add record to self.data
 		if name in self.data	:
-			for i in range(len(self.data[name])):
-				if self.data[name][i] == value:
-					return
-			self.data[name].append(value)
+			if value in self.data[name]	:
+				pass
+			else	:
+				self.data[name].append(value)
 		else	:
 			self.data[name] = [value]
 		# save current data to data file

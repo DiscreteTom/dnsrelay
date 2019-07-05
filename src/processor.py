@@ -38,7 +38,7 @@ def bytesNameToStr(name: bytes):
 	newName = bytes(name)
 	num = newName[0]
 	newName = newName[1:]
-	while num < len(newName):
+	while num < len(newName)-1:
 		newNum = newName[num] + 1
 		newName = newName[0: num] + bytes(b'.') + newName[num + 1:]
 		num += newNum
@@ -77,8 +77,9 @@ class Processor:
 		may be called many times simultaneously, need concurrency control
 		'''
 		# TODO: parse data and get result
-		t1 = threading.Thread(target=self.doParse, args = (data,))
-		t1.start()
+		# t1 = threading.Thread(target=self.doParse, args = (data,))
+		# t1.start()
+		self.doParse(data)
 
 
 	def doParse(self, data: dict):
@@ -90,7 +91,7 @@ class Processor:
 				data['address'] = self.queryList.pop(data['data']['header']['id'], {})
 				for i in range(0, newData['data']['header']['ancount']):
 					if newData['data']['answer'][i]['rdlength'] == 4:
-						self.data.add(bytesNameToStr(newData['data']['answer'][0]['name']), 0, 0, 0, bytesIpToStr(newData['data']['answer'][0]['rdata']))
+						self.data.add(newData['data']['answer'][0]['name'], 0, 0, 0, bytesIpToStr(newData['data']['answer'][0]['rdata']))
 				self.net.query(refdict(data))
 			return;
 		else:
@@ -126,7 +127,8 @@ class Processor:
 			# 处理数据
 			self.parseNames(newData)
 			name = bytesNameToStr(newData['data']['question'][0]['qname'])
-			ipStr = self.data.find(name)											# 进行查询
+			print(name)
+			ipStr = self.data.find(newData['data']['question'][0]['qname'])			# 进行查询
 			print(ipStr, newData['data']['question'][0]['qtype'])
 			if ipStr[0] == '' or newData['data']['question'][0]['qtype'] != 1:		# 没有记录，向服务器查询
 				self.queryList[data['data']['header']['id']] = data['address']
