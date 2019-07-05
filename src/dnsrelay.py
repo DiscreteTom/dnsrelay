@@ -14,5 +14,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# start relay controller
+
 	net = NetController(args['dns-server-ipaddr'], args['filename'], args['debugLevel'])
+
 	net.start()

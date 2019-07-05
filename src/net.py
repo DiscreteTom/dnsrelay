@@ -12,7 +12,7 @@ class NetController:
 
 		`debugLevel` should in `[0, 1, 2]`
 		'''
-		# self.processor = Processor(self, dnsFileName, debugLevel)
+		self.processor = Processor(self, dnsFileName, debugLevel)
 		self.debugLevel = debugLevel
 		self.serverAddr = serverAddr
 
@@ -38,7 +38,7 @@ class NetController:
 
 		while True:
 			data = self.packageToDict(*s.recvfrom(2048))
-			# self.processor.parse(data)
+			self.processor.parse(data)
 
 			if self.debugLevel > 0:
 				print('got data from', data['address.ip'], ':', data['address.port'])
@@ -54,7 +54,7 @@ class NetController:
 		'''
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		address, msg = dictToPackage(data)
+		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
 			print('reply to', address[0], ':', address[1])
@@ -62,6 +62,7 @@ class NetController:
 			print(msg)
 
 		s.sendto(msg, address)
+
 		s.close()
 	
 	def query(self, data: dict) -> None:
@@ -70,7 +71,7 @@ class NetController:
 		'''
 		import socket
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		address, msg = dictToPackage(data)
+		address, msg = self.dictToPackage(data)
 
 		if self.debugLevel > 0:
 			print('query to', self.serverAddr, ':', 53)
@@ -78,6 +79,12 @@ class NetController:
 			print(msg)
 
 		s.sendto(msg, (self.serverAddr, 53))
+
+		# addCode
+		data = self.packageToDict(*s.recvfrom(2048))
+		self.processor.parse(data)
+		# addCode
+
 		s.close()
 
 	def dictToPackage(self, data: dict) -> (tuple, bytes):
@@ -236,3 +243,6 @@ class NetController:
 		result['rdata'] = rawData[startIndex:startIndex + result['rdlength']]
 		startIndex += result['rdlength']
 		return startIndex, result
+
+net = NetController('10.3.9.5', 'test.yml')
+net.start()
