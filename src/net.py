@@ -85,6 +85,8 @@ class NetController:
 		if ready[0]:
 			data = self.packageToDict(*qs.recvfrom(2048))
 			self.processor.parse(data)
+		else:
+			print('timeout')
 
 		qs.close()
 
