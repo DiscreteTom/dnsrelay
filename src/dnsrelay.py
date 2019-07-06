@@ -15,6 +15,6 @@ if __name__ == '__main__':
 
 	# start relay controller
 
-	net = NetController(args['dns-server-ipaddr'], args['filename'], args['debugLevel'])
+	net = NetController(args['dns-server-ipaddr'], args['filename'], int(args['debugLevel']))
 
 	net.start()
