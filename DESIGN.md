@@ -9,6 +9,41 @@
 
 ## 功能设计
 
+### 命令行参数与选项
+
+在shell输入`python dnsrelay.py --help`可以查看以下帮助信息
+
+```
+usage: dnsrelay.py [-h] [-d | -dd] [dns-server-ipaddr] [filename]
+
+positional arguments:
+  dns-server-ipaddr  dns server ip address, "10.3.9.5" by default
+  filename           dns file name, "dnsrelay.yml" by default
+
+optional arguments:
+  -h, --help         show this help message and exit
+  -d                 level-1 debug
+  -dd                level-2 debug
+```
+
+其中`level-1 debug`模式会输出调试信息，`level-2 debug`模式会输出详细调试信息，如果没有参数`-d | -dd`则不开启debug，仅显示UDP服务器是否开启。
+
+### DNS中继功能
+
+启动UDP服务器后开始监听53端口。如果收到包，首先检测本地cache文件，如果存在匹配项且不为`0.0.0.0`则回复，如果为`0.0.0.0`则回复域名不存在。如果本地cache文件找不到对应的域名，则向DNS服务器发送请求，并将DNS服务器的返回包回复给客户端。
+
+### 网络通信与超时设计
+
+NetController模块使用一个socket监听53端口。如果需要向DNS服务器发送请求则新建一个socket向DNS服务器发送请求，并在设置超时时间之后进行等待。如果超时则停止接收并输出超时提示，如果在超时时间内收到回复则返回客户端。
+
+### 数据存储与多IP设计
+
+@buptjincheng
+
+### 并发设计
+
+@whitecambur
+
 ## 模块划分
 
 ### 模块划分图
@@ -96,7 +131,7 @@ data = {
 
 其中`name`或`qname`字段可能以`0b11`开头，表示引用包内其他名称。也可能为正常的字符串。如果是正常的字符串，则串尾包含`\0`
 
-### 并发设计
+### 模块级并发设计
 
 每次NetController接收到一个新的请求，都会调用Processor.parse。Processor.parse被调用后创建一个解析包的进程或线程后立即返回以防止NetController阻塞。因为parse可能调用Data.add引起Data内部数据的改变，所以需要对Data实例进行加锁保护。因为并行的Processor.parse可能同时多次调用NetController.reply或NetController.query，而NetController.query与NetController.reply会写发送缓冲区，所以Processor调用NetController.reply和NetController.query的时候也需要加锁。并发控制完全由Processor模块负责
 
@@ -144,4 +179,7 @@ True
 
 ### 集成测试
 
+
+
 ## 遇到的问题与解决
+
