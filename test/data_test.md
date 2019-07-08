@@ -46,7 +46,7 @@ f.close()
 
 # change data
 if url in data:
-    data[url].append(ip)
+    print("url已存在")
 else    :
     data[url] = [ip]
 
@@ -62,11 +62,13 @@ print(data)
 
 
 
-截图：
+测试结果及截图：
+(1)插入一个已存在的url：
 add_test1.png
+(2)插入一个新的url和对应ip:
 add_test2.png
-add_test3.png
-add_test4.png
+
+
 
 
 
@@ -86,6 +88,7 @@ data = yaml.safe_load(f)
 print(data)
 
 截图：
+初始化数据文件内容：
 add_init.png
 
 
@@ -114,9 +117,11 @@ else:
 
 
 截图：
+(1)查找成功：
 find_test1.png
+(2)查找失败：
 find_test2.png
-find_test3.png
+
 
 
 
