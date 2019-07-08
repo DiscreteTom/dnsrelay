@@ -49,8 +49,8 @@ data模块使用dict的key-value结构来在本地文件中存储url和对应的
 - 操作系统 - Windows 10
 - 编程语言 - Python3
 - 依赖库
-  - [refdict](https://pypi.org/project/refdict/)
-  - [PyYAML](https://pypi.org/project/PyYAML/)
+  - [refdict 3.2.0](https://pypi.org/project/refdict/)
+  - [PyYAML 5.1.1](https://pypi.org/project/PyYAML/)
 
 ## 模块划分
 
