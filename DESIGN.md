@@ -44,6 +44,14 @@ NetController模块使用一个socket监听53端口。如果需要向DNS服务�
 
 @whitecambur
 
+## 环境
+
+- 操作系统 - Windows 10
+- 编程语言 - Python3
+- 依赖库
+  - [refdict](https://pypi.org/project/refdict/)
+  - [PyYAML](https://pypi.org/project/PyYAML/)
+
 ## 模块划分
 
 ### 模块划分图
