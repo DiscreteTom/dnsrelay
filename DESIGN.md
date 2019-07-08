@@ -38,7 +38,7 @@ NetController模块使用一个socket监听53端口。如果需要向DNS服务�
 
 ### 数据存储与多IP设计
 
-@buptjincheng
+data模块使用dict的key-value结构来在本地文件中存储url和对应的ip。关于多ip设计，value部分使用一个list来对同一个url的多个ip进行存储。查找时，输入url，返回对应的ip的list，或返回空list。添加记录时，将url和ip以key-value的格式插入到本地文件。
 
 ### 并发设计
 
