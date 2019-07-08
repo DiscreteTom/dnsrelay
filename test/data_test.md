@@ -1,4 +1,4 @@
-            add
+            add测试
 源代码：
 # add  a record to self.data
 import yaml
@@ -65,11 +65,12 @@ print(data)
 截图：
 add_test1.png
 add_test2.png
+add_test3.png
+add_test4.png
 
 
 
-
-		add_init
+		add_init测试
 源代码：
 #add_init
 import yaml
@@ -89,7 +90,7 @@ add_init.png
 
 
 
-            find
+            find测试
 源代码：
 '''
 - if `url` is found, return its ip address
@@ -108,6 +109,9 @@ if url in data :
 	print(data[url])
 else:
 	print('找不到ip地址')
+
+
+
 
 截图：
 find_test1.png
