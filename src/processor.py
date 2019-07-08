@@ -1,4 +1,4 @@
-from data import Data
+# from data import Data
 from refdict import refdict
 import threading
 import multiprocessing # may be used in concurrency control
@@ -65,7 +65,7 @@ class Processor:
 		`debugLevel` should in `[0, 1, 2]`
 		'''
 		self.debugLevel = debugLevel
-		self.data = Data(filename, debugLevel)
+		# self.data = Data(filename, debugLevel)
 		self.net = netController
 		# 请求列表
 		self.queryList = {}
@@ -88,10 +88,10 @@ class Processor:
 			if self.queryList.get(data['data']['header']['id'], None) != None:
 				self.parseNames(newData)
 				data['address'] = self.queryList.pop(data['data']['header']['id'], {})
-				self.net.reply(data)
+				# self.net.reply(data)
 				for i in range(0, newData['data']['header']['ancount']):
 					if newData['data']['answer'][i]['type'] == 1 and len(newData['data']['answer'][i]['rdata']) == 4:
-						self.data.add(bytesNameToStr(newData['data']['question'][0]['qname'][:-1]), 0, 0, 0, bytesIpToStr(newData['data']['answer'][i]['rdata']))
+						0 # self.data.add(bytesNameToStr(newData['data']['question'][0]['qname'][:-1]), 0, 0, 0, bytesIpToStr(newData['data']['answer'][i]['rdata']))
 			return;
 		else:
 			# 回复给客户端的信息
@@ -126,10 +126,10 @@ class Processor:
 			# 处理数据
 			self.parseNames(newData)
 			name = bytesNameToStr(newData['data']['question'][0]['qname'])[:-1]
-			ipStr = self.data.find(name)											# 进行查询
+			ipStr = [''] # self.data.find(name)											# 进行查询
 			if ipStr[0] == '' or newData['data']['question'][0]['qtype'] != 1:		# 没有记录，向服务器查询
 				self.queryList[data['data']['header']['id']] = data['address']
-				self.net.query(data)
+				# self.net.query(data)
 				return;
 			elif ipStr[0] == '0.0.0.0':												# 无效域名
 				replyData['data']['header']['rcode'] = 3
@@ -145,7 +145,7 @@ class Processor:
 						'rdlength': 4,
 						'rdata': ip
 					})
-			self.net.reply(refdict(replyData))
+			# self.net.reply(refdict(replyData))
 		
 	def parseNames(self, newData: dict):
 		rawData = newData['rawData']
@@ -165,3 +165,33 @@ class Processor:
 				kname = newData['data'][packsName[k]][i]['name']
 				kname = dealName(kname, rawData)
 				newData['data'][packsName[k]][i]['name'] = kname
+
+
+
+bytesAddress = b'\x03www\x05baidu\x03com'
+print(bytesNameToStr(bytesAddress))
+
+bytesIp = b'\x0a\x03\x67\xfc'
+print(bytesIpToStr(bytesIp))
+
+ipStr = '145.165.205.255'
+print(bytes(bytearray(list(map(int, ipStr.split('.'))))))
+
+p = Processor()
+data = refdict({'address': {'ip': '1.1.1.1', 'port': 5555}, 
+				'data': {
+					'header': {
+						'id': b'\x00\x02', 
+						'qr': False, 'opcode': 0, 
+						'aa': False, 'tc': False, 
+						'rd': True, 'ra': True, 
+						'rcode': 0, 
+						'qdcount': 1, 'ancount': 0, 
+						'nscount': 0, 'arcount': 0
+					}, 
+					'question': [{'qname': b'\x03www\x05baidu\x03com\x00', 'qtype': 1, 'qclass': 1}], 
+					'answer': [], 'authority': [], 'additional': []}, 
+					'rawData': b"\x00\x02\x81\x80\x00\x01\x00\x03\x00\x00\x00\x00\x03www\x05baidu\x03com\x00\x00\x01\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x01\x10\x00\x0f\x03www\x01a\x06shifen\xc0\x16\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x0e\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x12"})
+p.parse(data)
+print(p.queryList)
+
