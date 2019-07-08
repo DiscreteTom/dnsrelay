@@ -1,5 +1,8 @@
-            add测试
+- 测试data.add
+
 源代码：
+
+```python
 # add  a record to self.data
 import yaml
 #d = {'www.baidu.com':'39.156.66.18'} 
@@ -59,21 +62,23 @@ f.close()
 f = open('add_find.yaml', encoding='utf-8')
 data = yaml.safe_load(f)
 print(data)
-
-
+```
 
 测试结果及截图：
+
 (1)插入一个已存在的url：
-add_test1.png
+
+![](img/add_test1.png)
+
 (2)插入一个新的url和对应ip:
-add_test2.png
 
+![](img/add_test2.png)
 
+- 测试add_init
 
-
-
-		add_init测试
 源代码：
+
+```python
 #add_init
 import yaml
 d = {'www.baidu.com':['39.156.66.18','39.156.66.19']} 
@@ -86,15 +91,20 @@ f.close()
 f = open('add_find.yaml', encoding='utf-8')
 data = yaml.safe_load(f)
 print(data)
+```
 
 截图：
+
 初始化数据文件内容：
-add_init.png
+
+![](img/add_init.png)
 
 
+- 测试find
 
-            find测试
 源代码：
+
+```python
 '''
 - if `url` is found, return its ip address
 - if `url` is '0.0.0.0', return '0.0.0.0'
@@ -112,19 +122,14 @@ if url in data :
 	print(data[url])
 else:
 	print('找不到ip地址')
-
-
-
+```
 
 截图：
+
 (1)查找成功：
-find_test1.png
+
+![](img/find_test1.png)
+
 (2)查找失败：
-find_test2.png
 
-
-
-
-
-
-
+![](img/find_test2.png)
