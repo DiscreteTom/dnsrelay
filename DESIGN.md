@@ -42,7 +42,37 @@ data模块使用dict的key-value结构来在本地文件中存储url和对应的
 
 ### 并发设计
 
-@whitecambur
+@WhiteCambur
+考虑到同一时间存在多个客户端向服务器发送dns请求的情况，故需要进行并发设计。该部分由processor模块实现
+
+为了同时处理多个客户端的请求，processor模块采用了多线程机制，对于每一个net模块发来的数据包，都会新开一个线程对其进行处理，从而达到并发与即时相应的处理效果，如以下代码所示：
+
+```python
+	def parse(self, data: dict):
+		'''
+		may be called many times simultaneously, need concurrency control
+		'''
+		# TODO: parse data and get result
+		t1 = threading.Thread(target=self.doParse, args = (data,))
+		t1.start()
+
+		# self.doParse is a function to parse data
+```
+
+为了将从远程dns主机回复过来的数据发给正确的请求客户端，程序内建立了一张“id : {ip, port}”映射表，当本地没有合适的数据给客户端时，会将dns请求的id、ip地址和端口号存入映射表中，然后将请求转发给远程dns服务器；当收到远程dns服务器回复的数据时，根据包中的id获得映射表中的ip和端口号，发送给请求客户端，然后把相应id对应的字段从映射表中删除。
+```python
+# 初始化部分
+	self.queryList = {}
+
+# 数据处理部分
+	if data['data']['header']['qr']:
+		if self.queryList.get(data['data']['header']['id'], None) != None:
+			self.parseNames(newData)
+			data['address'] = self.queryList.pop(data['data']['header']['id'], {})
+			self.net.reply(data)
+```
+
+对于并发机制而言，此功能做的并不完善，因为不用客户端发来的请求id可能是相同的。考虑到这种情况，解决的思路是：为每一个需要发送给远端的请求设置一个新的id，然后将此id作为关键字存储到“ 新id : {旧id, ip port}”映射表中，从而达到将请求发送给正确的客户端的目的。由于开发时间紧缺的缘故，该解决方案未能成功实施。
 
 ## 环境
 
@@ -184,6 +214,54 @@ True
 ```
 
 结果正确
+
+- 测试processor模块
+
+主要测试字节形式的域名转换为字符串形式的域名函数bytesNameToStr、字节形式的ip地址与字符串形式的ip地址相互转换的函数bytesIpToStr、映射表内容的修改。测试代码如下：
+
+```python
+# bytesNameToStr函数
+bytesAddress = b'\x03www\x05baidu\x03com'
+print(bytesNameToStr(bytesAddress))
+
+# bytesIpToStr函数
+bytesIp = b'\x0a\x03\x67\xfc'
+print(bytesIpToStr(bytesIp))
+
+# 字符串ip地址转为字节形式ip地址
+ipStr = '145.165.205.255'
+print(bytes(bytearray(list(map(int, ipStr.split('.'))))))
+
+# 映射表内容
+p = Processor()
+data = refdict({'address': {'ip': '1.1.1.1', 'port': 5555}, 
+				'data': {
+					'header': {
+						'id': b'\x00\x02', 
+						'qr': False, 'opcode': 0, 
+						'aa': False, 'tc': False, 
+						'rd': True, 'ra': True, 
+						'rcode': 0, 
+						'qdcount': 1, 'ancount': 0, 
+						'nscount': 0, 'arcount': 0
+					}, 
+					'question': [{'qname': b'\x03www\x05baidu\x03com\x00', 'qtype': 1, 'qclass': 1}], 
+					'answer': [], 'authority': [], 'additional': []}, 
+					'rawData': b"\x00\x02\x81\x80\x00\x01\x00\x03\x00\x00\x00\x00\x03www\x05baidu\x03com\x00\x00\x01\x00\x01\xc0\x0c\x00\x05\x00\x01\x00\x00\x01\x10\x00\x0f\x03www\x01a\x06shifen\xc0\x16\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x0e\xc0+\x00\x01\x00\x01\x00\x00\x00k\x00\x04'\x9cB\x12"})
+p.parse(data)
+print(p.queryList)
+```
+
+测试结果：
+
+```python
+www.baidu.com										# bytesNameToStr函数
+10.3.103.252										# bytesIpToStr函数
+b'\x91\xa5\xcd\xff'									# 字符串ip地址转为字节形式ip地址
+{b'\x00\x02': {'ip': '1.1.1.1', 'port': 5555}}		# 映射表内容
+```
+
+可见，测试结果均正确
 
 - 测试data.add
 
