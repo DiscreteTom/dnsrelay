@@ -42,7 +42,6 @@ data模块使用dict的key-value结构来在本地文件中存储url和对应的
 
 ### 并发设计
 
-@WhiteCambur
 考虑到同一时间存在多个客户端向服务器发送dns请求的情况，故需要进行并发设计。该部分由processor模块实现
 
 为了同时处理多个客户端的请求，processor模块采用了多线程机制，对于每一个net模块发来的数据包，都会新开一个线程对其进行处理，从而达到并发与即时相应的处理效果，如以下代码所示：
@@ -79,8 +78,8 @@ data模块使用dict的key-value结构来在本地文件中存储url和对应的
 - 操作系统 - Windows 10
 - 编程语言 - Python3
 - 依赖库
-  - [refdict](https://pypi.org/project/refdict/)
-  - [PyYAML](https://pypi.org/project/PyYAML/)
+  - [refdict 3.2.0](https://pypi.org/project/refdict/)
+  - [PyYAML 5.1.1](https://pypi.org/project/PyYAML/)
 
 ## 模块划分
 
