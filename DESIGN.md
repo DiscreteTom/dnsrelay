@@ -400,7 +400,75 @@ else:
 
 ### 集成测试
 
+根据任务需求，按照以下方案执行集成测试（初始状态下dns服务器的IP缓存为空）
 
+测试环境配置：设置本机默认dns服务器IP为127.0.0.1，关闭防火墙
+
+![](img/all_test_prepare1.png)
+
+![](img/all_test_prepare2.png)
+
+(1)基本情况测试
+
+使用nslookup请求一个域名的IP，观察结果：
+
+![](img/all_test_basic1.png)
+
+观察存储IP的文件内容：
+
+![](img/all_test_basic2.png)
+
+断网，使用nslookup再次请求该域名的IP，观察结果：
+
+![](img/all_test_basic3.png)
+
+可见，服务器可以处理基本的dns请求
+
+(2)多IP测试
+
+使用nslookup请求v.qq.com的IP，观察结果：
+
+![](img/all_test_multi1.png)
+
+观察存储IP的文件内容：
+
+![](img/all_test_multi2.png)
+
+断网，使用nslookup再次请求该域名的IP，观察结果：
+
+![](img/all_test_multi3.png)
+
+可见，服务器可以处理多ip域名的dns请求
+
+(3)IP屏蔽测试
+
+在存储IP的文件中，将 www.baidu.com 的IP设置为0.0.0.0
+
+![](img/all_test_abort1.png)
+
+使用nslookup请求 www.baidu.com 的IP，观察结果：
+
+![](img/all_test_abort2.png)
+
+可见，服务器可以实现对域名访问的屏蔽功能
+
+(4)并发测试
+
+同时打开多个网站，并进行抓包，观察抓到的请求包和回复包的顺序
+
+![](img/all_test_concurrent1.png)
+
+可见，服务器可以实现并发处理多个请求
+
+(5)超时处理测试
+
+断网，并向服务器发送存储表中没有的域名请求，观察服务器输出：
+
+![](img/all_test_timeout1.png)
+
+![](img/all_test_timeout2.png)
+
+可见，服务器可以显示请求超时信息
 
 ## 遇到的问题与解决
 
